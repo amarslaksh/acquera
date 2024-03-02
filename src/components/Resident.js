@@ -13,6 +13,8 @@ class Resident extends Component {
     this.getResidentData();
   }
 
+  //Get All Resident Data from the Parent Component
+  //Using Promise to get the URL and map the data using axios methods
   getResidentData() {
     const { residents } = this.props;
     const residentRequests = residents.map((residentURL) => axios.get(residentURL));
@@ -30,15 +32,15 @@ class Resident extends Component {
   render() {
     return (
         <div>
-            <div className="p-1 mx-1">
-                <h4>Planet Residents:</h4>
+            <div className="p-1 m-1">
+                <h4 className="text-left">Planet Residents:</h4>
                 <ul>
                 {this.state.residents.map((resident, index) => (
                     <div key={`${resident.name}-${index}`}>
-                        <li>Resident Name: {resident.name}</li>
-                        <li>Resident Height: {resident.height}</li>
-                        <li>Resident Mass: {resident.mass}</li>
-                        <li>Resident Gender: {resident.gender}</li>
+                        <li className="text-left">Resident Name: {resident.name}</li>
+                        <li className="text-left">Resident Height: {resident.height}</li>
+                        <li className="text-left">Resident Mass: {resident.mass}</li>
+                        <li className="text-left">Resident Gender: {resident.gender}</li>
                     </div>
                 ))}
                 </ul>

@@ -1,14 +1,10 @@
-import logo from './logo.svg';
 import './App.css';
 import Planets from './components/Planets';
-import Pagination from './components/Pagination';
 
 function App() {
   return (
     <div className="App container mx-auto">
-      {/* <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-      </header> */}
+      <h3 className="text-center">Planets and Resident Card</h3>
       <Planets/>
     </div>
   );

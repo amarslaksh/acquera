@@ -1,117 +1,132 @@
 import { Component } from "react";
-import axios from "axios";
+import axios from "../axiosinstance";
 import Resident from "./Resident";
 import Pagination from "./Pagination";
 
 class Planets extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            planets: [],
-            residents: [],
-            currentPage: 1,
-            totalPages: 1
-        }
-    }
-
-    componentDidMount() {
-        this.getPlanetData();
-    }    
-
-    getPlanetData() {
-        const URL = `https://swapi.dev/api/planets/?page=${this.state.currentPage}&format=json`;
-        axios.get(URL).then(response => {
-
-            const planets = response.data.results.map((planet, index) => {
-                return {
-                    ...planet,
-                    id: index
-                }
-            });
-            
-            this.setState({
-                planets: planets,
-                totalPages: Math.ceil(response.data.count / 10) 
-            });
-
-        }).catch(error => {
-            throw error;
-        })
-    }
-
-    handlePageChange = (newPage) => {
-        this.setState({ currentPage: newPage }, () => {
-            this.getPlanetData(); // Fetch data for the new page
-        });
-    }
-
-    getResidentData(planet) {
-        // Fetch resident data for the current planet
-        const residents = planet.residents.map(residentURL => axios.get(residentURL));
-        return Promise.all(residents)
-            .then(axios.spread((...responses) => {
-                const residentData = responses.map(response => response.data);
-                console.log('Resident data:', residentData); // Log the fetched resident data
-                console.log('state', this.state.planets);
-                const updatedPlanets = this.state.planets.map(p => {
-
-                    if (p === planet ) {
-                        return { ...p, residents: residentData };
-                    }
-                    return p;
-                });
-                console.log('Updated planets:', updatedPlanets); // Log the updated planets state
-                this.setState({ planets: updatedPlanets });
-            }))
-            .catch(error => {
-                console.error('Error fetching resident data:', error);
-            });
-    }
-    
-    fetchNextPage = () => {
-        const nextPage = this.state.currentPage + 1;
-        this.setState({ currentPage: nextPage });
-        this.getPlanetData(nextPage);
+  constructor(props) {
+    super(props);
+    this.state = {
+      planets: [],
+      residents: [],
+      currentPage: 1,
+      totalPages: 1,
+      loading: false,
     };
+  }
 
+  //It's always better to keep API calls in life cycle methods
+  componentDidMount() {
+    this.getPlanetData();
+  }
 
-    render() {
-        const planets = this.state.planets.map(planet => {
-            return (
-                <div key={planet.id} className="mt-3 w-auto">
-                    <div className="shadow border p-1 mx-3 min-h-40">
-                        <div className="p-1 mx-1">
-                            Planet Name: {planet.name}
-                        </div >
-                        <div className="p-1 mx-1">
-                            Planet Climate: {planet.climate}
-                        </div>
-                        <div className="p-1 mx-1">
-                            Planet Population: {planet.population}
-                        </div>
-                        <div className="p-1 mx-1">
-                            Planet Terrain: {planet.terrain}
-                        </div>
-                        <div className="p-1 mx-1">
-                        <h4>Planet Residents:</h4>
-                        <Resident residents={planet.residents} />
-                    </div>
-                    </div>
-                </div>
-                
-            )
-        })
-        return(
-            <div>
-                <div className="w-auto">
-                    <div className="flex flex-wrap">{planets}</div>
-                </div>
-                <div>
-                    <Pagination onPageChange={this.handlePageChange} />
-                </div>
+  //Get Data from the API Call
+  //Adding the data to the State
+  //Keeping Axios Api in a Separate file 
+  getPlanetData() {
+    this.setState({ loading: true });
+    const URL = `?page=${this.state.currentPage}&format=json`;
+    axios
+      .get(URL)
+      .then((response) => {
+        const planets = response.data.results.map((planet, index) => {
+          return {
+            ...planet,
+            id: index,
+          };
+        });
+
+        this.setState({
+          loading: false,
+          planets: planets,
+          totalPages: Math.ceil(response.data.count / 10),
+        });
+      })
+      .catch((error) => {
+        throw error;
+      });
+  }
+
+  //Get the Current Page and Setting the data 
+  //based on the new page values
+  handlePageChange = (newPage) => {
+    this.setState({ currentPage: newPage }, () => {
+      this.getPlanetData(); // Fetch data for the new page
+    });
+  };
+
+  //Fetch the next page
+  fetchNextPage = () => {
+    const nextPage = this.state.currentPage + 1;
+    this.setState({ currentPage: nextPage });
+    this.getPlanetData(nextPage);
+  };
+
+  render() {
+    const { planets, loading } = this.state;
+
+    const loader = (
+      <div className="flex items-center justify-center w-full h-full">
+        <div
+          role="status"
+          className="flex items-center justify-center w-56 h-56 rounded-lg"
+        >
+          <svg
+            aria-hidden="true"
+            className="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+            viewBox="0 0 100 101"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+              fill="currentColor"
+            />
+            <path
+              d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+              fill="currentFill"
+            />
+          </svg>
+          <span className="sr-only">Loading...</span>
+        </div>
+      </div>
+    );
+
+    const planetsRender = planets.map((planet) => (
+      <div key={planet.id} className="mt-3 w-full sm:w-1/2 md:w-1/3 lg:w-1/4">
+        <div className="shadow border p-3 mx-3 h-full flex flex-col bg-gray-100 hover:bg-gray-200">
+          <div className="flex-grow">
+            <div className="p-1 mx-1 text-left">Planet Name: {planet.name}</div>
+            <div className="p-1 mx-1 text-left">
+              Planet Climate: {planet.climate}
             </div>
-        )
-    }
+            <div className="p-1 mx-1 text-left">
+              Planet Population: {planet.population}
+            </div>
+            <div className="p-1 mx-1 text-left">
+              Planet Terrain: {planet.terrain}
+            </div>
+            <div className="p-1 mx-1 text-left">
+              <Resident residents={planet.residents} />
+            </div>
+          </div>
+        </div>
+      </div>
+    ));
+
+    return (
+      <div>
+        <div className="w-auto">
+          <div className="flex flex-wrap">
+            {loading ? loader : planetsRender}
+          </div>
+        </div>
+        <div>
+          <Pagination onPageChange={this.handlePageChange} />
+        </div>
+      </div>
+    );
+  }
 }
 
 export default Planets;
